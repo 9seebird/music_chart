@@ -448,14 +448,27 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
   padding: 12px 14px;
+  border: none;
   border-radius: 12px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   overflow: hidden;
-  transition: transform 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
 }
 
 .artist-rank-item:hover {
   transform: translateX(2px);
+}
+
+/* 선택된 가수 (아래 목록이 이 가수의 곡으로 필터링된 상태) */
+.artist-rank-item.selected {
+  box-shadow: inset 0 0 0 2px #111827;
 }
 
 /* 1위 대비 비율만큼 깔리는 옅은 배경 막대 */
@@ -466,6 +479,11 @@
   left: 0;
   border-radius: 12px;
   background: linear-gradient(90deg, #eef2ff 0%, #f8fafc 100%);
+  transition: background 0.2s ease;
+}
+
+.artist-rank-item.selected .artist-rank-fill {
+  background: linear-gradient(90deg, #dbe2ff 0%, #eef2ff 100%);
 }
 
 /* 배지 / 가수명 / 곡 수는 배경 막대 위로 올립니다 */
@@ -517,6 +535,37 @@
   font-size: 16px;
   font-weight: 800;
   color: #111827;
+}
+
+/* 섹션 제목 아래 안내 문구 */
+.section-hint {
+  margin: -8px 0 12px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* 가수 필터를 해제하는 버튼 */
+.filter-clear-button {
+  margin-left: 10px;
+  padding: 5px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background-color: #ffffff;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: middle;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.filter-clear-button:hover {
+  border-color: #111827;
+  background-color: #111827;
+  color: #ffffff;
 }
 
 .song-title-row {

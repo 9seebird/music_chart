@@ -204,7 +204,15 @@ function CompareCard({ item }: { item: CompareItem }) {
  *   { name: "IVE (아이브)", value: 3 },
  * ]
  */
-function ArtistRankList({ data }: { data: ArtistChartItem[] }) {
+function ArtistRankList({
+  data,
+  selectedArtist,
+  onSelect,
+}: {
+  data: ArtistChartItem[];
+  selectedArtist: string | null;
+  onSelect: (artistName: string) => void;
+}) {
   if (data.length === 0) return null;
 
   // data는 곡 수 내림차순으로 정렬되어 있으므로 첫 번째 값이 최댓값입니다.
@@ -214,21 +222,32 @@ function ArtistRankList({ data }: { data: ArtistChartItem[] }) {
   return (
     <div className="artist-rank-card">
       <ol className="artist-rank-list">
-        {data.map((artist, index) => (
-          <li key={artist.name} className="artist-rank-item">
-            <span
-              className="artist-rank-fill"
-              style={{ width: `${(artist.value / maxValue) * 100}%` }}
-            />
-            <span className={`artist-rank-badge rank-${index + 1}`}>
-              {index + 1}
-            </span>
-            <span className="artist-rank-name">{artist.name}</span>
-            <span className="artist-rank-count">
-              <strong>{artist.value}</strong>곡
-            </span>
-          </li>
-        ))}
+        {data.map((artist, index) => {
+          const isSelected = artist.name === selectedArtist;
+
+          return (
+            <li key={artist.name}>
+              <button
+                type="button"
+                className={`artist-rank-item ${isSelected ? "selected" : ""}`}
+                onClick={() => onSelect(artist.name)}
+                aria-pressed={isSelected}
+              >
+                <span
+                  className="artist-rank-fill"
+                  style={{ width: `${(artist.value / maxValue) * 100}%` }}
+                />
+                <span className={`artist-rank-badge rank-${index + 1}`}>
+                  {index + 1}
+                </span>
+                <span className="artist-rank-name">{artist.name}</span>
+                <span className="artist-rank-count">
+                  <strong>{artist.value}</strong>곡
+                </span>
+              </button>
+            </li>
+          );
+        })}
       </ol>
     </div>
   );
@@ -262,6 +281,15 @@ function App() {
    * 예: 곡 제목 / 가수명 필터링용
    */
   const [chartKeyword, setChartKeyword] = useState("");
+
+  /**
+   * 아티스트 비중 TOP5에서 선택한 가수명
+   * null이면 선택 안 함(= 차트 전체 표시)
+   *
+   * 검색어(chartKeyword)와는 동시에 쓰지 않습니다.
+   * 둘 중 하나를 쓰면 다른 하나는 비웁니다.
+   */
+  const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
 
   /**
    * 상위 몇 개까지 화면에 표시할지 결정하는 상태
@@ -298,6 +326,9 @@ function App() {
     try {
       setLoading(true);
       setError("");
+
+      // 사이트가 바뀌면 이전 사이트에서 고른 가수 선택은 해제합니다.
+      setSelectedArtist(null);
 
       const response = await fetch(`https://api.9seebird.me/api/charts?site=${selectedSite}`);
 
@@ -457,7 +488,7 @@ function App() {
 
   /**
    * 현재 사이트 차트 목록을
-   * 1) chartKeyword로 필터링하고
+   * 1) 선택한 가수 또는 chartKeyword로 필터링하고
    * 2) visibleCount만큼 잘라서
    * 최종적으로 화면에 보여줄 목록을 만듭니다.
    *
@@ -465,6 +496,18 @@ function App() {
    */
   const filteredChartItems = useMemo(() => {
     if (!chartData) return [];
+
+    // TOP5에서 가수를 골랐으면 그 가수의 곡만 보여줍니다.
+    //
+    // artistChartData가 artist 값을 그대로(가공 없이) 세기 때문에
+    // 여기서도 정확히 일치하는 곡만 골라야
+    // TOP5에 적힌 곡 수와 실제 표시되는 곡 수가 일치합니다.
+    //
+    // 표시 개수(TOP10/50/100) 제한은 적용하지 않습니다.
+    // 4곡이라고 적혀 있는데 TOP10 안에 2곡만 있다고 2곡만 보이면 헷갈리기 때문입니다.
+    if (selectedArtist) {
+      return chartData.items.filter((song) => song.artist === selectedArtist);
+    }
 
     const normalizedKeyword = chartKeyword.trim().toLowerCase();
 
@@ -485,7 +528,16 @@ function App() {
 
     // 검색어가 없을 때만 표시 개수 제한 적용
     return filtered.slice(0, visibleCount);
-  }, [chartData, chartKeyword, visibleCount]);
+  }, [chartData, chartKeyword, visibleCount, selectedArtist]);
+
+  /**
+   * TOP5에서 가수를 클릭했을 때 호출됩니다.
+   * 이미 선택된 가수를 다시 누르면 선택이 해제됩니다.
+   */
+  const handleArtistSelect = (artistName: string) => {
+    setSelectedArtist((prev) => (prev === artistName ? null : artistName));
+    setChartKeyword("");
+  };
 
   /**
    * 현재 차트 전체(chartData.items)를 기준으로
@@ -565,7 +617,11 @@ function App() {
               type="text"
               placeholder="곡명 또는 가수명을 입력하세요"
               value={chartKeyword}
-              onChange={(e) => setChartKeyword(e.target.value)}
+              onChange={(e) => {
+                setChartKeyword(e.target.value);
+                // 검색을 시작하면 가수 선택은 해제합니다.
+                setSelectedArtist(null);
+              }}
             />
           </div>
 
@@ -610,7 +666,14 @@ function App() {
           {/* 상단 요약 영역 대신 현재 차트의 아티스트 비중 목록 표시 */}
           <section className="chart-summary">
             <h2 className="section-title">아티스트 비중 TOP5</h2>
-            <ArtistRankList data={artistChartData} />
+            <p className="section-hint">
+              가수를 누르면 아래에 그 가수의 곡만 보여줍니다.
+            </p>
+            <ArtistRankList
+              data={artistChartData}
+              selectedArtist={selectedArtist}
+              onSelect={handleArtistSelect}
+            />
           </section>
 
           {/* 차트 리스트 */}
@@ -618,10 +681,22 @@ function App() {
             <h2 className="section-title">
               {site.toUpperCase()} 차트
               <span className="chart-count">
-                {chartKeyword
-                  ? ` - 검색 결과 ${filteredChartItems.length}곡`
-                  : ` - ${filteredChartItems.length}곡`}
+                {selectedArtist
+                  ? ` - ${selectedArtist} ${filteredChartItems.length}곡`
+                  : chartKeyword
+                    ? ` - 검색 결과 ${filteredChartItems.length}곡`
+                    : ` - ${filteredChartItems.length}곡`}
               </span>
+
+              {selectedArtist && (
+                <button
+                  type="button"
+                  className="filter-clear-button"
+                  onClick={() => setSelectedArtist(null)}
+                >
+                  전체 보기
+                </button>
+              )}
             </h2>
 
             {/* 현재 차트 검색 결과가 있으면 리스트 표시, 없으면 안내 문구 표시 */}
