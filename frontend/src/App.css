@@ -424,13 +424,99 @@
   margin: 24px 0 28px;
 }
 
-.artist-chart-card {
+.artist-rank-card {
   width: 100%;
-  background: #ffffff;
+  padding: 8px;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
-  padding: 16px 20px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
   box-sizing: border-box;
+}
+
+.artist-rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.artist-rank-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.15s ease;
+}
+
+.artist-rank-item:hover {
+  transform: translateX(2px);
+}
+
+/* 1위 대비 비율만큼 깔리는 옅은 배경 막대 */
+.artist-rank-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #eef2ff 0%, #f8fafc 100%);
+}
+
+/* 배지 / 가수명 / 곡 수는 배경 막대 위로 올립니다 */
+.artist-rank-badge,
+.artist-rank-name,
+.artist-rank-count {
+  position: relative;
+}
+
+.artist-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background-color: #e5e7eb;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.artist-rank-badge.rank-1 {
+  background-color: #111827;
+  color: #ffffff;
+}
+
+.artist-rank-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artist-rank-count {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.artist-rank-count strong {
+  margin-right: 2px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #111827;
 }
 
 .song-title-row {

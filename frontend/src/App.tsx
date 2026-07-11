@@ -1,14 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Cell,
-} from "recharts";
 
 /**
  * 사이트 이름 타입
@@ -201,7 +192,11 @@ function CompareCard({ item }: { item: CompareItem }) {
 }
 
 /**
- * 현재 차트 기준 아티스트 비중 TOP5 그래프 컴포넌트
+ * 현재 차트 기준 아티스트 비중 TOP5 목록 컴포넌트
+ *
+ * 막대 그래프 대신 "순위 + 가수명 + 곡 수"를 목록으로 보여줍니다.
+ * 각 줄 배경에는 1위 대비 비율만큼 옅은 막대가 깔려서
+ * 숫자를 읽지 않아도 비중이 한눈에 들어옵니다.
  *
  * data 예시:
  * [
@@ -209,51 +204,32 @@ function CompareCard({ item }: { item: CompareItem }) {
  *   { name: "IVE (아이브)", value: 3 },
  * ]
  */
-function ArtistChart({ data }: { data: ArtistChartItem[] }) {
-  /**
-   * 막대 색상 배열
-   * 상위 5개 막대가 조금 더 보기 좋게 구분되도록 사용합니다.
-   */
-  const barColors = ["#6bdbf2d4", "#76a5ef", "#eb67b2", "#a47cef", "#efdf76"];
+function ArtistRankList({ data }: { data: ArtistChartItem[] }) {
+  if (data.length === 0) return null;
+
+  // data는 곡 수 내림차순으로 정렬되어 있으므로 첫 번째 값이 최댓값입니다.
+  // 이 값을 기준으로 각 줄의 배경 막대 길이를 정합니다.
+  const maxValue = data[0].value;
 
   return (
-    <div className="artist-chart-card">
-      <ResponsiveContainer width="100%" height={180}>
-        <BarChart
-          data={data}
-          layout="vertical" // ⭐ 이거 추가
-          barCategoryGap="30%" // 막대 간격 크게
-          barGap={4} // 막대 사이 간격
-          margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
-        >
-          {/* 숫자 축 */}
-          <XAxis type="number" tick={{ fontSize: 10 }} />
-
-          {/* 가수 이름 축 */}
-          <YAxis
-            type="category"
-            dataKey="name"
-            width={80} // ⭐ 중요 (공간 확보)
-            tick={{ fontSize: 11 }}
-            tickFormatter={(value) =>
-              value.length > 6 ? value.slice(0, 6) + "…" : value
-            }
-          />
-
-          {/* 마우스를 올리면 상세값 표시 */}
-          <Tooltip />
-
-          {/* 막대 그래프 본체 */}
-          <Bar dataKey="value" radius={[0, 8, 8, 0]}>
-            {data.map((_, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={barColors[index % barColors.length]}
-              />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+    <div className="artist-rank-card">
+      <ol className="artist-rank-list">
+        {data.map((artist, index) => (
+          <li key={artist.name} className="artist-rank-item">
+            <span
+              className="artist-rank-fill"
+              style={{ width: `${(artist.value / maxValue) * 100}%` }}
+            />
+            <span className={`artist-rank-badge rank-${index + 1}`}>
+              {index + 1}
+            </span>
+            <span className="artist-rank-name">{artist.name}</span>
+            <span className="artist-rank-count">
+              <strong>{artist.value}</strong>곡
+            </span>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }
@@ -631,10 +607,10 @@ function App() {
       {/* 데이터가 있을 때만 표시 */}
       {chartData && !loading && (
         <>
-          {/* 상단 요약 영역 대신 현재 차트의 아티스트 비중 그래프 표시 */}
+          {/* 상단 요약 영역 대신 현재 차트의 아티스트 비중 목록 표시 */}
           <section className="chart-summary">
             <h2 className="section-title">아티스트 비중 TOP5</h2>
-            <ArtistChart data={artistChartData} />
+            <ArtistRankList data={artistChartData} />
           </section>
 
           {/* 차트 리스트 */}
