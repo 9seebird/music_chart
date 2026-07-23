@@ -330,7 +330,7 @@ function App() {
       // 사이트가 바뀌면 이전 사이트에서 고른 가수 선택은 해제합니다.
       setSelectedArtist(null);
 
-      const response = await fetch(`https://api.9seebird.me/api/charts?site=${selectedSite}`);
+      const response = await fetch(`https://api.trendkit.app/api/charts?site=${selectedSite}`);
 
       if (!response.ok) {
         throw new Error("차트 데이터를 불러오지 못했습니다.");
@@ -400,7 +400,7 @@ function App() {
        * 한글/공백/특수문자가 들어가도 안전하게 요청합니다.
        */
       const response = await fetch(
-        `https://api.9seebird.me/api/charts/compare?keyword=${encodeURIComponent(finalKeyword)}`,
+        `https://api.trendkit.app/api/charts/compare?keyword=${encodeURIComponent(finalKeyword)}`,
       );
 
       // HTTP 응답이 실패면 에러 처리
